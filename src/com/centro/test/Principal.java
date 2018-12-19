@@ -503,8 +503,12 @@ public class Principal {
                     System.out.println("La Obra Social fue eliminada del sistema con exito. Presione Enter para continuar.");
                 }
             } catch (SQLException e) {
-                System.out.println("Excepcion creando la conexión: " + e);                
-                System.exit(0);
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");
+                System.out.println("\nPresione Enter para continuar.");
+                //System.out.println("Excepcion creando la conexión: " + e);                
+                //System.exit(0);
             }            
         }else{
             System.out.println("Presione Enter para continuar.");
