@@ -16,6 +16,19 @@ public abstract class Persona {
     private int sexo;
     private String email;
 
+    public Persona() {
+        this.apellidoYNombre = "";
+        this.domicilio = "";
+        this.tipoDocumento = "";
+        this.numeroDocumento = 0;
+        this.fechaNacimiento = null;
+        this.telefono = "";
+        this.idPersona = 0;
+        this.nacionalidad = "";
+        this.sexo = 0;
+        this.email = "";
+    } 
+    
     public Persona(String apellidoYNombre, String domicilio, String tipoDocumento, int numeroDocumento, Date fechaNacimiento, String telefono, int idPersona, String nacionalidad, int sexo, String email) {
         this.apellidoYNombre = apellidoYNombre;
         this.domicilio = domicilio;
@@ -28,6 +41,7 @@ public abstract class Persona {
         this.sexo = sexo;
         this.email = email;
     }
+       
     public String getApellidoYNombre() {
         return apellidoYNombre;
     }

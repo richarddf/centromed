@@ -5,7 +5,7 @@
  */
 package com.centro.test;
 
-//import com.centro.model.Paciente;
+import com.centro.model.Paciente;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -14,6 +14,7 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -135,6 +136,10 @@ public class Principal {
                     //Date hora = validarHora("Turno");
                     waitForKeypress.nextLine();
                     break;                
+                case "17":
+                    mostrarTurnoMedico(url, username, pass, sc);
+                    waitForKeypress.nextLine();
+                    break;
                 case "s":
                 case "S":
                     break;
@@ -227,6 +232,33 @@ public class Principal {
         }        
     }
 
+    public static void modificaPaciente(String url, String username, String pass, Scanner sc){
+        //Paciente pac;
+        borrarPantalla();
+        System.out.println("Modificar Paciente");
+        System.out.println("------------------------------------\n");
+        int idpac = validarPaciente(url, username, pass);
+        String query = "SELECT * FROM PACIENTE WHERE NUMERODOCUMENTO = " + idpac;
+        Paciente pac = new Paciente();
+        
+        if(siNo("Desea eliminar el paciente y su historia clinica")){
+            try (Connection con = DriverManager.getConnection(url, username, pass)) {
+                Statement stmt = con.createStatement();
+
+                //String query = "DELETE FROM PACIENTE WHERE IdPaciente = " + idpac;
+ 
+                if (stmt.executeUpdate(query) == 1) {
+                    System.out.println("El paciente fue eliminado del sistema con exito. Presione Enter para continuar.");
+                }
+            } catch (SQLException e) {
+                System.out.println("Excepcion creando la conexión: " + e);
+                System.exit(0);
+            }            
+        }else{
+            System.out.println("Presione Enter para continuar.");
+        }       
+    }
+    
     public static void eliminaPaciente(String url, String username, String pass, Scanner sc){
         //Paciente pac;
         borrarPantalla();
@@ -546,7 +578,7 @@ public class Principal {
     }
     
     public static void agregaTurno(String url, String username, String pass, Scanner sc){
-        
+        String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
         borrarPantalla();
         System.out.println("Agregar Turno");
         System.out.println("------------------------------------\n");
@@ -554,12 +586,14 @@ public class Principal {
         int med = validarMedico(url, username, pass);
         Date fechaTurno = validarFecha("Turno");
         Date horaTurno = validarHora("Turno");
-        
+        DateFormat df = new SimpleDateFormat("HH:mm");
+        String hora = df.format(horaTurno).trim();
+        int posi = Arrays.binarySearch(turnos, hora);
         try (Connection con = DriverManager.getConnection(url, username, pass)) {
             Statement stmt = con.createStatement();
            
             String query = "INSERT INTO TURNOS VALUES (" + getNewId(url, username, pass, "turnos", "IdTurno") + ","
-                    + pac + ", " + med + ", '" + new java.sql.Date(fechaTurno.getTime()) + "', '" + new java.sql.Time(horaTurno.getTime()) + "', '00:00', 0"+")";           
+                    + pac + ", " + med + ", '" + new java.sql.Date(fechaTurno.getTime()) + "', '" + new java.sql.Time(horaTurno.getTime()) + "', '00:00', 0, "+posi+")";           
            
             if (stmt.executeUpdate(query) == 1) {
                 System.out.println("El turno fue añadido al sistema con exito. Presione Enter para continuar.");
@@ -573,6 +607,42 @@ public class Principal {
             System.exit(0);
         }        
     }
+
+    
+    public static void mostrarTurnoMedico(String url, String username, String pass, Scanner sc){
+        
+        borrarPantalla();
+        String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
+        String [] pacien = new String [13];
+        int medic = validarMedico(url, username, pass);
+        Date fecha = validarFecha("Turno");
+        String query = "SELECT posicion, horainicial,apellidoYNombre FROM turnos INNER JOIN paciente ON turnos.idpaciente = paciente.idpaciente where idmedico = " + medic + " and fecha = '"+new java.sql.Date(fecha.getTime())+"' order by posicion";
+        
+        System.out.println("Lista de Turnos");
+        System.out.println(rPad("",80,'-'));
+        System.out.println(rPad("Hora",12,' ')+"\t"+lPad("Paciente",80,' '));
+        System.out.println(rPad("",80,'-'));
+
+        try (Connection con = DriverManager.getConnection(url, username, pass)) {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {                
+                int pos = rs.getInt("posicion");
+                String cod = rs.getString("HoraInicial");
+                String paci = rs.getString("apellidoYNombre");
+                turnos[pos] = cod;
+                pacien[pos] = paci.trim();
+            }
+            for (int posicion = 0; posicion < 13; posicion++) {
+                System.out.println(rPad(turnos[posicion],12,' ')+"\t"+lPad(pacien[posicion],80,' '));
+            }   
+            System.out.println("\nPresione Enter para continuar.");
+            
+        } catch (SQLException e) {
+            System.out.println("Excepcion creando conexión: " + e);
+            System.exit(0);
+        }
+    }    
     
     public static Date validarFecha(String mensaje){
         Date testDate = null;

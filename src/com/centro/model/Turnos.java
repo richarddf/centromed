@@ -1,19 +1,16 @@
 package com.centro.model;
 
-
-import java.sql.Time;
 import java.util.Date;
-
 
 public class Turnos {
 
     private int idTurno;
     private Date fecha;
-    private Time hora;
+    private Date hora;
     private Paciente paciente;
     private Medico medico;
 
-    public Turnos(int idTurno, Date fecha, Time hora, Paciente paciente, Medico medico) {
+    public Turnos(int idTurno, Date fecha, Date hora, Paciente paciente, Medico medico) {
         this.idTurno = idTurno;
         this.fecha = fecha;
         this.hora = hora;
@@ -37,11 +34,11 @@ public class Turnos {
         this.fecha = fecha;
     }
 
-    public Time getHora() {
+    public Date getHora() {
         return hora;
     }
 
-    public void setHora(Time hora) {
+    public void setHora(Date hora) {
         this.hora = hora;
     }
 

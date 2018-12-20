@@ -10,6 +10,12 @@ public class Paciente extends Persona {
     private String planObraSocial;
     private ObraSocial obraSocial;
 
+    public Paciente() {
+        this.codigoAfiliadoObraSocial = "";
+        this.planObraSocial = "";
+        this.obraSocial = new ObraSocial();
+    }
+
     public Paciente(String codigoAfiliadoObraSocial, String planObraSocial, ObraSocial obraSocial, String apellidoYNombre, String domicilio, String tipoDocumento, int numeroDocumento, Date fechaNacimiento, String telefono, int idPersona, String nacionalidad, int sexo, String email) {
         super(apellidoYNombre, domicilio, tipoDocumento, numeroDocumento, fechaNacimiento, telefono, idPersona, nacionalidad, sexo, email);
         this.codigoAfiliadoObraSocial = codigoAfiliadoObraSocial;

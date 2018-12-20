@@ -5,11 +5,19 @@ public class ObraSocial {
 
     private int idObraSocial;
     private String nombreObraSocial;
-    private int cuit;
+    private String cuit;
     private String domicilio;
     private String telefono;
 
-    public ObraSocial(int idObraSocial, String nombreObraSocial, int cuit, String domicilio, String telefono) {
+    public ObraSocial() {
+        this.idObraSocial = 0;
+        this.nombreObraSocial = "";
+        this.cuit = "";
+        this.domicilio = "";
+        this.telefono = "";
+    }
+    
+    public ObraSocial(int idObraSocial, String nombreObraSocial, String cuit, String domicilio, String telefono) {
         this.idObraSocial = idObraSocial;
         this.nombreObraSocial = nombreObraSocial;
         this.cuit = cuit;
@@ -33,11 +41,11 @@ public class ObraSocial {
         this.nombreObraSocial = nombreObraSocial;
     }
 
-    public int getCuit() {
+    public String getCuit() {
         return cuit;
     }
 
-    public void setCuit(int cuit) {
+    public void setCuit(String cuit) {
         this.cuit = cuit;
     }
 
