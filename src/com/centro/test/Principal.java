@@ -234,7 +234,7 @@ public class Principal {
         System.out.println("------------------------------------\n");
         int idpac = validarPaciente(url, username, pass);
 
-        if(siNo("el paciente y su historia clinica")){
+        if(siNo("Desea eliminar el paciente y su historia clinica")){
             try (Connection con = DriverManager.getConnection(url, username, pass)) {
                 Statement stmt = con.createStatement();
 
@@ -394,7 +394,7 @@ public class Principal {
         System.out.println("------------------------------------\n");
         int idMed = validarMedico(url, username, pass);
 
-        if(siNo("el médico")){
+        if(siNo("Desea eliminar el médico")){
             try (Connection con = DriverManager.getConnection(url, username, pass)) {
                 Statement stmt = con.createStatement();
 
@@ -493,7 +493,7 @@ public class Principal {
         System.out.println("------------------------------------\n");
         int idObraSoc = validarOS(url, username, pass);
 
-        if(siNo("la Obra Social")){
+        if(siNo("Desea eliminar la Obra Social")){
             try (Connection con = DriverManager.getConnection(url, username, pass)) {
                 Statement stmt = con.createStatement();
 
@@ -559,7 +559,7 @@ public class Principal {
             Statement stmt = con.createStatement();
            
             String query = "INSERT INTO TURNOS VALUES (" + getNewId(url, username, pass, "turnos", "IdTurno") + ","
-                    + pac + ", " + med + ", '" + new java.sql.Date(fechaTurno.getTime()) + "', '" + new java.sql.Date(horaTurno.getTime()) + "')";           
+                    + pac + ", " + med + ", '" + new java.sql.Date(fechaTurno.getTime()) + "', '" + new java.sql.Time(horaTurno.getTime()) + "', '00:00', 0"+")";           
            
             if (stmt.executeUpdate(query) == 1) {
                 System.out.println("El turno fue añadido al sistema con exito. Presione Enter para continuar.");
@@ -605,17 +605,18 @@ public class Principal {
     public static Date validarHora(String mensaje){
         Date testDate = null;
         boolean valido = false;
+        String date = "";
         do 
         {
            System.out.print("Ingrese la hora " + mensaje + " con formato hh:mm :");
            Scanner sc = new Scanner(System.in);
-           String fecha = sc.nextLine();
+           date = sc.nextLine();
            DateFormat df = new SimpleDateFormat("HH:mm");
-           String date = df.format(fecha);
            try{
                testDate = df.parse(date);
+               //String otrafec = df.format(testDate);
                //System.out.println("Ahora hemos creado un objeto date con la fecha indicada, "+testDate);
-           } catch (ParseException e){ 
+           } catch (Exception e){ 
                System.out.println("Formato no valido");
            }
             if (!df.format(testDate).equals(date)){
@@ -865,7 +866,7 @@ public class Principal {
         String opcion = "";
         boolean respuesta = false;
         do {
-            System.out.print("Desea eliminar "+ mensaje +"[S]/[N] ?: ");
+            System.out.print(mensaje +" [S]/[N] ?: ");
             Scanner sc = new Scanner(System.in);
             opcion = sc.nextLine();
 
