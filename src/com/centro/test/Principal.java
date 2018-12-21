@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -21,9 +20,8 @@ import java.util.regex.Pattern;
 
 public class Principal {
 
-    /**
-     * @param args the command line arguments
-     */
+    public static Date horaTurno;
+    
     public static void main(String[] args) {
         String url = "jdbc:mysql://localhost:3306/dbcmed?zeroDateTimeBehavior=convertToNull";
         String username = "root";
@@ -72,10 +70,10 @@ public class Principal {
             System.out.println(">>---- Menu Turnos ----<<");
             System.out.println(rPad("",50,'*'));
             System.out.println("14.- Agregar Turno");
-            System.out.println("15.- Modificar Turno");
-            System.out.println("16.- Eliminar Turno");
-            System.out.println("17.- Mostrar Turnos Por Medico");
-            System.out.println("18.- Mostrar Turnos Por Fecha");
+            //System.out.println("15.- Modificar Turno");
+            System.out.println("15.- Eliminar Turno");
+            System.out.println("16.- Mostrar Turnos Por Medico");
+            System.out.println("17.- Mostrar Turnos Por Fecha");
             System.out.println(rPad("",50,'*'));
             
             System.out.println("s.- Salida\n");
@@ -136,8 +134,12 @@ public class Principal {
                     //Date hora = validarHora("Turno");
                     waitForKeypress.nextLine();
                     break;                
-                case "17":
+                case "16":
                     mostrarTurnoMedico(url, username, pass, sc);
+                    waitForKeypress.nextLine();
+                    break;
+                case "17":
+                    mostrarTurnoFecha(url, username, pass, sc);
                     waitForKeypress.nextLine();
                     break;
                 case "s":
@@ -310,7 +312,8 @@ public class Principal {
     }
     
     public static void mostrarPacientes(String url, String username, String pass, Scanner sc){
-        String query = "SELECT apellidoYNombre,paciente.Domicilio,numeroDocumento,fechanacimiento,paciente.telefono,razonsocial FROM paciente INNER JOIN obrasocial on paciente.idobrasocial = obrasocial.idobrasocial";
+        String query = "SELECT apellidoYNombre,paciente.Domicilio,numeroDocumento,fechanacimiento,paciente.telefono,razonsocial FROM paciente"
+                +" INNER JOIN obrasocial on paciente.idobrasocial = obrasocial.idobrasocial";
 
         System.out.println("Lista de Pacientes");
         System.out.println(rPad("",180,'-'));
@@ -374,8 +377,9 @@ public class Principal {
         String domicilio = sc.nextLine();
         System.out.print("Ingrese tipo de documento [DNI]/[CI]/[PAS]: ");
         String tipoDocumento = sc.nextLine();
-        System.out.print("Ingrese el numero de documento del paciente: ");
-        String numeroDocumento = sc.nextLine();
+        //System.out.print("Ingrese el numero de documento del paciente: ");
+        //String numeroDocumento = sc.nextLine();
+        String numeroDocumento = validarDocumento("el numero de documento del médico");
         Date fechaNac = validarFecha("Nacimiento");
         System.out.print("Ingrese la nacionalidad ");
         String nacionalidad = sc.nextLine();
@@ -578,17 +582,15 @@ public class Principal {
     }
     
     public static void agregaTurno(String url, String username, String pass, Scanner sc){
-        String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
+        //String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
         borrarPantalla();
         System.out.println("Agregar Turno");
         System.out.println("------------------------------------\n");
         int pac = validarPaciente(url, username, pass);
         int med = validarMedico(url, username, pass);
         Date fechaTurno = validarFecha("Turno");
-        Date horaTurno = validarHora("Turno");
-        DateFormat df = new SimpleDateFormat("HH:mm");
-        String hora = df.format(horaTurno).trim();
-        int posi = Arrays.binarySearch(turnos, hora);
+        int posi = validarHoraTurno(url, username, pass);
+        
         try (Connection con = DriverManager.getConnection(url, username, pass)) {
             Statement stmt = con.createStatement();
            
@@ -610,6 +612,13 @@ public class Principal {
 
     
     public static void mostrarTurnoMedico(String url, String username, String pass, Scanner sc){
+
+        String rojo = "\033[31m";
+        String verde = "\033[32m";
+//        String naranja = "\033[33m";
+        String azul = "\033[34m";
+//        String morado = "\033[35m";
+
         
         borrarPantalla();
         String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
@@ -634,7 +643,12 @@ public class Principal {
                 pacien[pos] = paci.trim();
             }
             for (int posicion = 0; posicion < 13; posicion++) {
-                System.out.println(rPad(turnos[posicion],12,' ')+"\t"+lPad(pacien[posicion],80,' '));
+                if (turnos[posicion].length()>5){
+                    System.out.println(rojo+rPad(turnos[posicion],12,' ')+"\t"+lPad(pacien[posicion],80,' '));
+                }else{
+                    System.out.println(azul+rPad(turnos[posicion],12,' ')+"\t"+lPad(pacien[posicion],80,' '));
+                }
+                
             }   
             System.out.println("\nPresione Enter para continuar.");
             
@@ -643,6 +657,38 @@ public class Principal {
             System.exit(0);
         }
     }    
+    
+    public static void mostrarTurnoFecha(String url, String username, String pass, Scanner sc){
+        
+        borrarPantalla();
+        Date fecha = validarFecha("Turno");
+        String query = "SELECT posicion, horainicial, paciente.apellidoYNombre as apenom1, medico.apellidoYNombre as apenom2 FROM turnos"
+                +" INNER JOIN paciente ON turnos.idpaciente = paciente.idpaciente" 
+                +" INNER JOIN medico ON turnos.idmedico = medico.idmedico where fecha = '"+new java.sql.Date(fecha.getTime())+"' order by 4,1";
+        
+        System.out.println("Lista de Turnos");
+        System.out.println(rPad("",112,'-'));
+        System.out.println(lPad("Medico",50,' ')+rPad("Hora",12,' ')+"\t"+lPad("Paciente",50,' '));
+        System.out.println(rPad("",112,'-'));
+
+        try (Connection con = DriverManager.getConnection(url, username, pass)) {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            
+            while (rs.next()) {                
+                String cod = rs.getString("HoraInicial");
+                String paci = rs.getString("apenom1");
+                String medi = rs.getString("apenom2");
+                System.out.println(lPad(medi.trim(),50,' ')+rPad(cod.trim(),12,' ')+"\t"+lPad(paci.trim(),50,' '));
+            }
+            
+            System.out.println("\nPresione Enter para continuar.");
+            
+        } catch (SQLException e) {
+            System.out.println("Excepcion creando conexión: " + e);
+            System.exit(0);
+        }
+    }
     
     public static Date validarFecha(String mensaje){
         Date testDate = null;
@@ -699,7 +745,27 @@ public class Principal {
             //System.out.println("invalid date!!");
         return testDate;
     }    
-    
+
+    public static int validarHoraTurno(String url, String username, String pass){
+        boolean valido = false;
+        int posi;
+        String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
+        
+        do {            
+            horaTurno = validarHora("Turno");
+            DateFormat df = new SimpleDateFormat("HH:mm");
+            String hora = df.format(horaTurno).trim();
+            posi = Arrays.binarySearch(turnos, hora);
+            if (posi <= 0) {
+                System.out.println("Solo puede ingresar como hora la siguiente lista: 08:00, 08:20, 08:40, 09:00, 09:20, 09:40, 10:00, 10:20, 10:40, 11:00, 11:20, 11:40, 12:00");               
+            }else{
+                valido = true;
+            }           
+        } while (!valido);
+        
+        return posi;
+    }
+       
     public static int validarOS(String url, String username, String pass){
         int os = 0;
         boolean valido = false;
@@ -738,7 +804,7 @@ public class Principal {
  
         do 
         {
-            System.out.print("Ingrese el numero de documento: ");
+            System.out.print("Ingrese el numero de documento del paciente: ");
             Scanner sc = new Scanner(System.in);
             nPac = sc.nextInt();
 
