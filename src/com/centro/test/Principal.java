@@ -25,8 +25,8 @@ public class Principal {
     public static void main(String[] args) {
         String url = "jdbc:mysql://localhost:3306/dbcmed?zeroDateTimeBehavior=convertToNull";
         String username = "root";
-        String pass = "";
         //String pass = "";
+        String pass = "";
         
         Scanner sc = new Scanner(System.in);
         Scanner waitForKeypress = new Scanner(System.in);
@@ -130,7 +130,7 @@ public class Principal {
                     waitForKeypress.nextLine();
                     break;
                 case "15":
-                    //agregaTurno(url, username, pass, sc);
+                    eliminaTurno(url, username, pass, sc);
                     //Date hora = validarHora("Turno");
                     waitForKeypress.nextLine();
                     break;                
@@ -155,7 +155,7 @@ public class Principal {
     }
     
     public static void borrarPantalla() {
-        for (int clear = 0; clear < 1000; clear++) {
+        for (int clear = 0; clear < 200; clear++) {
             System.out.println("\b");
         }
     }
@@ -314,7 +314,7 @@ public class Principal {
     public static void mostrarPacientes(String url, String username, String pass, Scanner sc){
         String query = "SELECT apellidoYNombre,paciente.Domicilio,numeroDocumento,fechanacimiento,paciente.telefono,razonsocial FROM paciente"
                 +" INNER JOIN obrasocial on paciente.idobrasocial = obrasocial.idobrasocial";
-
+        borrarPantalla();
         System.out.println("Lista de Pacientes");
         System.out.println(rPad("",180,'-'));
         System.out.println(lPad("Apellido Y Nombre",40,' ')+lPad("Domicilio",50,' ')+rPad("Documento",10,' ')+rPad("Fecha Nac",20,' ')+"\t"+lPad("Telefono",20,' ')+lPad("Obra Social",30,' '));
@@ -453,11 +453,11 @@ public class Principal {
     }    
     
     public static void mostrarMedicos(String url, String username, String pass, Scanner sc){
-        String query = "SELECT apellidoYNombre,Domicilio,numeroDocumento,fechanacimiento,telefono,profesion,cuit FROM medico";
-
+        String query = "SELECT idmedico,apellidoYNombre,Domicilio,numeroDocumento,fechanacimiento,telefono,profesion,cuit FROM medico";
+        borrarPantalla();
         System.out.println("Lista de Médicos");
         System.out.println(rPad("",200,'-'));
-        System.out.println(lPad("Apellido Y Nombre",40,' ')+lPad("Domicilio",50,' ')+rPad("Documento",10,' ')+rPad("Fecha Nac",20,' ')+"\t"+lPad("Telefono",20,' ')+lPad("Profesión",30,' ')+lPad("Cuit",15,' '));
+        System.out.println(rPad("Codigo",10,' ')+"\t"+lPad("Apellido Y Nombre",40,' ')+lPad("Domicilio",50,' ')+rPad("Documento",10,' ')+rPad("Fecha Nac",20,' ')+"\t"+lPad("Telefono",20,' ')+lPad("Profesión",30,' ')+lPad("Cuit",15,' '));
         System.out.println(rPad("",200,'-'));
 
         try (Connection con = DriverManager.getConnection(url, username, pass)) {
@@ -466,6 +466,7 @@ public class Principal {
 
             while (rs.next()) {
                 
+                String codigo = rs.getString("idmedico");
                 String apenom = rs.getString("apellidoYNombre");
                 String domic = rs.getString("domicilio");
                 String doc = rs.getString("numeroDocumento");
@@ -474,7 +475,7 @@ public class Principal {
                 String profe = rs.getString("profesion");
                 String cuit = rs.getString("cuit");
 
-                System.out.println(lPad(apenom.trim(),40,' ')+lPad(domic.trim(),50,' ')+rPad(doc.trim(),10,' ')+rPad(fechanac.trim(),20,' ')+"\t"+lPad(tel.trim(),20,' ')+lPad(profe.trim(),30,' ')+lPad(cuit.trim(),15,' '));
+                System.out.println(rPad(codigo.trim(),10,' ')+"\t"+lPad(apenom.trim(),40,' ')+lPad(domic.trim(),50,' ')+rPad(doc.trim(),10,' ')+rPad(fechanac.trim(),20,' ')+"\t"+lPad(tel.trim(),20,' ')+lPad(profe.trim(),30,' ')+lPad(cuit.trim(),15,' '));
             }
             System.out.println("\nPresione Enter para continuar.");
             
@@ -582,15 +583,42 @@ public class Principal {
     }
     
     public static void agregaTurno(String url, String username, String pass, Scanner sc){
-        //String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
+     
         borrarPantalla();
         System.out.println("Agregar Turno");
         System.out.println("------------------------------------\n");
         int pac = validarPaciente(url, username, pass);
         int med = validarMedico(url, username, pass);
+        int posi;
         Date fechaTurno = validarFecha("Turno");
-        int posi = validarHoraTurno(url, username, pass);
-        
+        boolean valido = false;
+        do {
+            posi = validarHoraTurno(url, username, pass);
+            DateFormat df = new SimpleDateFormat("HH:mm:ss");
+            //System.out.println(">> "+horaTurno);
+            String hora = df.format(horaTurno);
+            //Date hora = horaTurno.;
+            // new java.sql.Time(hora.getTime())
+            try (Connection con = DriverManager.getConnection(url, username, pass)) {
+                String query = "SELECT posicion, horainicial,apellidoYNombre FROM turnos INNER JOIN paciente ON turnos.idpaciente = paciente.idpaciente"
+                +" WHERE idmedico = " + med + " and fecha = '"+new java.sql.Date(fechaTurno.getTime())+"' and horaInicial = '"+ hora + "' order by posicion";
+                Statement stmt = con.createStatement();
+                
+                ResultSet rs = stmt.executeQuery(query);
+                boolean tieneReg = rs.last();
+                if (tieneReg){
+                    System.out.println("Dicho Turno esta ocupado por: "+rs.getString("apellidoYNombre") +", revise los turnos disponibles por favor");
+                }else{
+                    valido = true;
+                }
+            } catch (SQLException e) {
+                //System.out.println("Excepcion creando la conexión: " + e);
+                System.out.println("Excepcion creando la conexión - Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");                
+            }
+        } while (!valido);
+
         try (Connection con = DriverManager.getConnection(url, username, pass)) {
             Statement stmt = con.createStatement();
            
@@ -598,36 +626,91 @@ public class Principal {
                     + pac + ", " + med + ", '" + new java.sql.Date(fechaTurno.getTime()) + "', '" + new java.sql.Time(horaTurno.getTime()) + "', '00:00', 0, "+posi+")";           
            
             if (stmt.executeUpdate(query) == 1) {
-                System.out.println("El turno fue añadido al sistema con exito. Presione Enter para continuar.");
-                
+                System.out.println("El turno fue añadido al sistema con exito. Presione Enter para continuar.");                
             } else {
                 System.out.println("Fallo al insertar el turno!");
             }
-
         } catch (SQLException e) {
-            System.out.println("Excepcion creando la conexión: " + e);
-            System.exit(0);
+                System.out.println("Excepcion creando la conexión - Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");
         }        
     }
 
+    public static void eliminaTurno(String url, String username, String pass, Scanner sc){
+     
+        borrarPantalla();
+        System.out.println("Eliminar Turno");
+        System.out.println("------------------------------------\n");
+        int med = validarMedico(url, username, pass);
+        int posi;
+        int idturno = 0;
+        String datosTurno = "";
+        Date fechaTurno = validarFecha("Turno");
+        boolean valido = false;
+        do {
+            posi = validarHoraTurno(url, username, pass);
+            DateFormat df = new SimpleDateFormat("HH:mm:ss");
+            //System.out.println(">> "+horaTurno);
+            String hora = df.format(horaTurno);
+            //Date hora = horaTurno.;
+            // new java.sql.Time(hora.getTime())
+            try (Connection con = DriverManager.getConnection(url, username, pass)) {
+                String query = "SELECT posicion, horainicial,apellidoYNombre,idturno FROM turnos INNER JOIN paciente ON turnos.idpaciente = paciente.idpaciente"
+                +" WHERE idmedico = " + med + " and fecha = '"+new java.sql.Date(fechaTurno.getTime())+"' and horaInicial = '"+ hora + "' order by posicion";
+                Statement stmt = con.createStatement();
+                
+                ResultSet rs = stmt.executeQuery(query);
+                boolean tieneReg = rs.last();
+                if (!tieneReg){
+                    System.out.println("Dicho Turno No Existe ");
+                }else{
+                    datosTurno = rs.getString("apellidoYNombre")+" "+rs.getString("horainicial");
+                    idturno = rs.getInt("idturno");
+                    valido = true;
+                }
+            } catch (SQLException e) {
+                System.out.println("Excepcion creando la conexión - Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");
+            }
+        } while (!valido);
+        
+        if(siNo(datosTurno)){
+            try (Connection con = DriverManager.getConnection(url, username, pass)) {
+                Statement stmt = con.createStatement();
+
+                String query = "DELETE FROM TURNOS WHERE IDTURNO = " + idturno;           
+
+                if (stmt.executeUpdate(query) == 1) {
+                    System.out.println("El turno fue eliminado con exito. Presione Enter para continuar.");                
+                } else {
+                    System.out.println("Fallo al borrar el turno!");
+                }
+            } catch (SQLException e) {
+                System.out.println("Excepcion creando la conexión - Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");
+            }              
+        }      
+    }    
     
     public static void mostrarTurnoMedico(String url, String username, String pass, Scanner sc){
 
         String rojo = "\033[31m";
         String verde = "\033[32m";
-//        String naranja = "\033[33m";
         String azul = "\033[34m";
-//        String morado = "\033[35m";
-
+        String morado = "\033[35m";
         
         borrarPantalla();
         String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
         String [] pacien = new String [13];
         int medic = validarMedico(url, username, pass);
         Date fecha = validarFecha("Turno");
-        String query = "SELECT posicion, horainicial,apellidoYNombre FROM turnos INNER JOIN paciente ON turnos.idpaciente = paciente.idpaciente where idmedico = " + medic + " and fecha = '"+new java.sql.Date(fecha.getTime())+"' order by posicion";
+        String query = "SELECT posicion, horainicial,apellidoYNombre FROM turnos INNER JOIN paciente ON turnos.idpaciente = paciente.idpaciente"
+                +" WHERE idmedico = " + medic + " and fecha = '"+new java.sql.Date(fecha.getTime())+"' order by posicion";
         
-        System.out.println("Lista de Turnos");
+        System.out.println("\n\nLista de Turnos\t"+azul+"[Disponible]"+verde+"  --------  "+rojo+"[Ocupado]");
         System.out.println(rPad("",80,'-'));
         System.out.println(rPad("Hora",12,' ')+"\t"+lPad("Paciente",80,' '));
         System.out.println(rPad("",80,'-'));
@@ -748,20 +831,24 @@ public class Principal {
 
     public static int validarHoraTurno(String url, String username, String pass){
         boolean valido = false;
-        int posi;
+        int posi = -1;
         String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
         
-        do {            
-            horaTurno = validarHora("Turno");
-            DateFormat df = new SimpleDateFormat("HH:mm");
-            String hora = df.format(horaTurno).trim();
-            posi = Arrays.binarySearch(turnos, hora);
-            if (posi <= 0) {
-                System.out.println("Solo puede ingresar como hora la siguiente lista: 08:00, 08:20, 08:40, 09:00, 09:20, 09:40, 10:00, 10:20, 10:40, 11:00, 11:20, 11:40, 12:00");               
-            }else{
-                valido = true;
-            }           
-        } while (!valido);
+        try {
+            do {            
+                horaTurno = validarHora("Turno");
+                DateFormat df = new SimpleDateFormat("HH:mm");
+                String hora = df.format(horaTurno).trim();
+                posi = Arrays.binarySearch(turnos, hora);
+                if (posi < 0) {
+                    System.out.println("Solo puede ingresar como hora la siguiente lista: 08:00, 08:20, 08:40, 09:00, 09:20, 09:40, 10:00, 10:20, 10:40, 11:00, 11:20, 11:40, 12:00");               
+                }else{
+                    valido = true;
+                }           
+            } while (!valido);            
+        } catch (Exception e) {
+                System.out.println("Código de Error: \n" + "Mensaje: " + e.getMessage() + "\n");            
+        }
         
         return posi;
     }
