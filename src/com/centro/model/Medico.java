@@ -7,7 +7,7 @@ import java.util.Date;
 public class Medico extends Persona {
 
     private String profesion;
-    private int cuit;
+    private String cuit;
     private int numeroMatricula;
     private String categoriaIva;
 
@@ -19,11 +19,11 @@ public class Medico extends Persona {
         this.profesion = profesion;
     }
 
-    public int getCuit() {
+    public String getCuit() {
         return cuit;
     }
 
-    public void setCuit(int cuit) {
+    public void setCuit(String cuit) {
         this.cuit = cuit;
     }
 
@@ -43,7 +43,14 @@ public class Medico extends Persona {
         this.categoriaIva = categoriaIva;
     }
 
-    public Medico(String profesion, int cuit, int numeroMatricula, String categoriaIva, String apellidoYNombre, String domicilio, String tipoDocumento, int numeroDocumento, Date fechaNacimiento, String telefono, int idPersona, String nacionalidad, int sexo, String email) {
+    public Medico() {
+        super();
+        this.profesion = "";
+        this.cuit = "";
+        this.numeroMatricula = 0;
+        this.categoriaIva = "";
+    }    
+    public Medico(String profesion, String cuit, int numeroMatricula, String categoriaIva, String apellidoYNombre, String domicilio, String tipoDocumento, int numeroDocumento, Date fechaNacimiento, String telefono, int idPersona, String nacionalidad, String sexo, String email) {
         super(apellidoYNombre, domicilio, tipoDocumento, numeroDocumento, fechaNacimiento, telefono, idPersona, nacionalidad, sexo, email);
         this.profesion = profesion;
         this.cuit = cuit;
@@ -52,6 +59,10 @@ public class Medico extends Persona {
     }
 
     public void mostrarMedico() {
-            throw new UnsupportedOperationException();
+        super.mostrarPersona();
+        System.out.println("Profesión: "+this.getProfesion());
+        System.out.println("CUIT: "+this.getCuit());
+        System.out.println("Número Matricula: "+this.getNumeroMatricula());
+        System.out.println("Categoría Iva: "+this.getCategoriaIva());
     }
 }

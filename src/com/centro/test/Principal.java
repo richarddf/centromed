@@ -5,6 +5,8 @@
  */
 package com.centro.test;
 
+import com.centro.model.Medico;
+import com.centro.model.ObraSocial;
 import com.centro.model.Paciente;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -87,6 +89,7 @@ public class Principal {
                     waitForKeypress.nextLine();
                     break;
                 case "2":
+                    modificaPaciente(url, username, pass, sc);
                     waitForKeypress.nextLine();
                     break;
                 case "3":
@@ -105,6 +108,10 @@ public class Principal {
                     agregaObraSocial(url, username, pass, sc);
                     waitForKeypress.nextLine();
                     break;
+                case "7":
+                    modificaObraSocial(url, username, pass, sc);
+                    waitForKeypress.nextLine();
+                    break;
                 case "8":
                     eliminaObraSocial(url, username, pass, sc);
                     waitForKeypress.nextLine();
@@ -115,6 +122,10 @@ public class Principal {
                     break;
                 case "10":
                     agregaMedico(url, username, pass, sc);
+                    waitForKeypress.nextLine();
+                    break;
+                case "11":
+                    modificaMedico(url, username, pass, sc);
                     waitForKeypress.nextLine();
                     break;
                 case "12":
@@ -187,24 +198,20 @@ public class Principal {
         borrarPantalla();
         System.out.println("Agregar Paciente");
         System.out.println("------------------------------------\n");
-        //System.out.print("Ingrese el Apellido y Nombre del paciente: ");
-        String apellidoYNombre = validarNombrePropio("el Apellido y Nombre del paciente");//sc.nextLine();
+        String apellidoYNombre = validarNombrePropio("el Apellido y Nombre del paciente");
         System.out.print("Ingrese el domicilio: ");
         String domicilio = sc.nextLine();
-        System.out.print("Ingrese tipo de documento [DNI]/[CI]/[PAS]: ");
-        String tipoDocumento = sc.nextLine();
-        //System.out.print("Ingrese el numero de documento del paciente: ");
+        String tipoDocumento = validarTipoDoc();
         String numeroDocumento = validarDocumento("el numero de documento del paciente");
         Date fechaNac = validarFecha("Nacimiento");
         System.out.print("Ingrese la nacionalidad ");
         String nacionalidad = sc.nextLine();
         System.out.print("Ingrese el numero de telefono: ");
         String numeroTelefono = sc.nextLine();
-        //System.out.print("Ingrese el sexo [F]/[M]: ");
-        String sexo = validarSexo();//sc.nextLine();
+        String sexo = validarSexo();
         System.out.print("Ingrese el email: ");
         String email = sc.nextLine();
-        int obraSoc = validarOS(url, username, pass);
+        int obraSoc = buscarIdObraSocial(url, username, pass);
         System.out.print("Ingrese Codigo de Afiliado de la Obra Social: ");
         String codigoAfilOS = sc.nextLine();
         System.out.print("Ingrese el plan en la Obra Social: ");
@@ -229,33 +236,61 @@ public class Principal {
             }
 
         } catch (SQLException e) {
-            System.out.println("Excepcion creando la conexión: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }        
     }
 
     public static void modificaPaciente(String url, String username, String pass, Scanner sc){
-        //Paciente pac;
+
         borrarPantalla();
         System.out.println("Modificar Paciente");
         System.out.println("------------------------------------\n");
-        int idpac = validarPaciente(url, username, pass);
-        String query = "SELECT * FROM PACIENTE WHERE NUMERODOCUMENTO = " + idpac;
-        Paciente pac = new Paciente();
+        Paciente pac = buscarPaciente(url, username, pass);
+        pac.mostrarPaciente();
+        //int idpac = pac.getIdPersona();
         
-        if(siNo("Desea eliminar el paciente y su historia clinica")){
+        if(siNo("Desea modificar datos del paciente")){
+            System.out.println("Modificando datos...");
+            String apellidoYNombre = validarNombrePropio("el Apellido y Nombre del paciente");
+            System.out.print("Ingrese el domicilio: ");
+            String domicilio = sc.nextLine();
+            String tipoDocumento = validarTipoDoc();
+            String numeroDocumento = validarDocumento("el numero de documento del paciente");
+            Date fechaNac = validarFecha("Nacimiento");
+            System.out.print("Ingrese la nacionalidad ");
+            String nacionalidad = sc.nextLine();
+            System.out.print("Ingrese el numero de telefono: ");
+            String numeroTelefono = sc.nextLine();
+            String sexo = validarSexo();
+            System.out.print("Ingrese el email: ");
+            String email = sc.nextLine();
+            int obraSoc = buscarIdObraSocial(url, username, pass);
+            System.out.print("Ingrese Codigo de Afiliado de la Obra Social: ");
+            String codigoAfilOS = sc.nextLine();
+            System.out.print("Ingrese el plan en la Obra Social: ");
+            String planOS = sc.nextLine();
+                    
             try (Connection con = DriverManager.getConnection(url, username, pass)) {
                 Statement stmt = con.createStatement();
 
-                //String query = "DELETE FROM PACIENTE WHERE IdPaciente = " + idpac;
- 
+                String query = "UPDATE PACIENTE SET apellidoynombre = '" + apellidoYNombre + "', domicilio = '" + domicilio + "', tipodocumento = '" +tipoDocumento+"',"
+                    + " numerodocumento ="+numeroDocumento + ", fechanacimiento = '" + new java.sql.Date(fechaNac.getTime()) + "', nacionalidad = '"+ nacionalidad+ "',"
+                    + " telefono = '"+ numeroTelefono + "', sexo = '" + sexo + "', email = '" + email + "', "
+                    + " idobrasocial ="+obraSoc + ", numeroafiliadoObraSocial = '" + codigoAfilOS +"', nombrePlanObraSocial = '" + planOS + "' WHERE IdPaciente = " + pac.getIdPersona();                
+       
                 if (stmt.executeUpdate(query) == 1) {
-                    System.out.println("El paciente fue eliminado del sistema con exito. Presione Enter para continuar.");
+                    System.out.println("El paciente fue modificado con exito. Presione Enter para continuar.");
                 }
             } catch (SQLException e) {
-                System.out.println("Excepcion creando la conexión: " + e);
-                System.exit(0);
-            }            
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");            
+                System.out.println("Presione Enter para continuar.");
+            }
+            
         }else{
             System.out.println("Presione Enter para continuar.");
         }       
@@ -266,7 +301,7 @@ public class Principal {
         borrarPantalla();
         System.out.println("Eliminar Paciente");
         System.out.println("------------------------------------\n");
-        int idpac = validarPaciente(url, username, pass);
+        int idpac = buscarIdPaciente(url, username, pass);
 
         if(siNo("Desea eliminar el paciente y su historia clinica")){
             try (Connection con = DriverManager.getConnection(url, username, pass)) {
@@ -274,17 +309,21 @@ public class Principal {
 
                 String query = "DELETE FROM PACIENTE WHERE IdPaciente = " + idpac;
                 String query2 = "DELETE FROM HISTORIACLINICAPACIENTE WHERE IdPaciente = " + idpac;
-
-                if (stmt.executeUpdate(query2) == 1) {
-                    System.out.println("La historia clinica del paciente fue eliminada del sistema con exito.");
-                }
                 
                 if (stmt.executeUpdate(query) == 1) {
                     System.out.println("El paciente fue eliminado del sistema con exito. Presione Enter para continuar.");
                 }
+                if (stmt.executeUpdate(query2) == 1) {
+                    System.out.println("La historia clinica del paciente fue eliminada del sistema con exito.");
+                }
+
             } catch (SQLException e) {
-                System.out.println("Excepcion creando la conexión: " + e);
-                System.exit(0);
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");
+                System.out.println("Presione Enter para continuar.");
+                //System.out.println("Excepcion creando la conexión: " + e);
+                //System.exit(0);
             }            
         }else{
             System.out.println("Presione Enter para continuar.");
@@ -306,8 +345,10 @@ public class Principal {
             }
 
         } catch (SQLException e) {
-            System.out.println("Excepcion creando la conexión: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }        
     }
     
@@ -329,17 +370,20 @@ public class Principal {
                 String apenom = rs.getString("apellidoYNombre");
                 String domic = rs.getString("domicilio");
                 String doc = rs.getString("numeroDocumento");
-                String fechanac = rs.getString("fechanacimiento");
+                Date fecnac = rs.getDate("fechanacimiento");
+                String fecha = obtenerFechaFormateada(fecnac,"dd/MM/yyyy");
                 String tel = rs.getString("telefono");
                 String rsocial = rs.getString("razonsocial");
 
-                System.out.println(lPad(apenom.trim(),40,' ')+lPad(domic.trim(),50,' ')+rPad(doc.trim(),10,' ')+rPad(fechanac.trim(),20,' ')+"\t"+lPad(tel.trim(),20,' ')+lPad(rsocial.trim(),30,' '));
+                System.out.println(lPad(apenom.trim(),40,' ')+lPad(domic.trim(),50,' ')+rPad(doc.trim(),10,' ')+rPad(fecha.trim(),20,' ')+"\t"+lPad(tel.trim(),20,' ')+lPad(rsocial.trim(),30,' '));
             }
             System.out.println("\nPresione Enter para continuar.");
 
         } catch (SQLException e) {
-            System.out.println("Exception creating connection: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }        
     }
 
@@ -347,7 +391,7 @@ public class Principal {
         borrarPantalla();
         System.out.println("Historia Clinica");
         System.out.println("------------------------------------\n");
-        int idpac = validarPaciente(url, username, pass);
+        int idpac = buscarIdPaciente(url, username, pass);
 
         try (Connection con = DriverManager.getConnection(url, username, pass)) {
             Statement stmt = con.createStatement();
@@ -361,8 +405,10 @@ public class Principal {
             }
             System.out.println("\nPresione Enter para continuar.");
         } catch (SQLException e) {
-            System.out.println("Exception creating connection: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }       
     }
     
@@ -371,28 +417,21 @@ public class Principal {
         borrarPantalla();
         System.out.println("Agregar Médico");
         System.out.println("------------------------------------\n");
-        //System.out.print("Ingrese el Apellido y Nombre del Médico: ");
-        String apellidoYNombre = validarNombrePropio("el Apellido y Nombre del Médico");//sc.nextLine();
+        String apellidoYNombre = validarNombrePropio("el Apellido y Nombre del Médico");
         System.out.print("Ingrese el domicilio: ");
         String domicilio = sc.nextLine();
-        System.out.print("Ingrese tipo de documento [DNI]/[CI]/[PAS]: ");
-        String tipoDocumento = sc.nextLine();
-        //System.out.print("Ingrese el numero de documento del paciente: ");
-        //String numeroDocumento = sc.nextLine();
+        String tipoDocumento = validarTipoDoc();
         String numeroDocumento = validarDocumento("el numero de documento del médico");
         Date fechaNac = validarFecha("Nacimiento");
         System.out.print("Ingrese la nacionalidad ");
         String nacionalidad = sc.nextLine();
         System.out.print("Ingrese el numero de telefono: ");
         String numeroTelefono = sc.nextLine();
-        //System.out.print("Ingrese el sexo [F]/[M]: ");
-        String sexo = validarSexo();//sc.nextLine();
+        String sexo = validarSexo();
         System.out.print("Ingrese el email: ");
         String email = sc.nextLine();
         System.out.print("Ingrese la Profesión: ");
         String profesion = sc.nextLine();        
-        //System.out.print("Ingrese CUIT: ");
-        //String cuit = sc.nextLine();
         String cuit = validarCuit();
         System.out.print("Ingrese el numero de matrícula: ");
         String numeroMatricula = sc.nextLine();
@@ -418,17 +457,71 @@ public class Principal {
             }
 
         } catch (SQLException e) {
-            System.out.println("Excepcion creando la conexión: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }        
     }
 
+    public static void modificaMedico(String url, String username, String pass, Scanner sc){
+        borrarPantalla();
+        System.out.println("Modificar Médico");
+        System.out.println("------------------------------------\n");
+        Medico med = buscarMedico(url, username, pass);
+        med.mostrarMedico();
+        
+        if(siNo("Desea modificar datos del médico")){
+            System.out.println("Modificando datos...");
+            String apellidoYNombre = validarNombrePropio("el Apellido y Nombre del médico");
+            System.out.print("Ingrese el domicilio: ");
+            String domicilio = sc.nextLine();
+            String tipoDocumento = validarTipoDoc();
+            String numeroDocumento = validarDocumento("el numero de documento del médico");
+            Date fechaNac = validarFecha("Nacimiento");
+            System.out.print("Ingrese la nacionalidad: ");
+            String nacionalidad = sc.nextLine();
+            System.out.print("Ingrese el numero de telefono: ");
+            String numeroTelefono = sc.nextLine();
+            String sexo = validarSexo();
+            System.out.print("Ingrese el email: ");
+            String email = sc.nextLine();
+            System.out.print("Ingrese la Profesión: ");
+            String profesion = sc.nextLine();        
+            String cuit = validarCuit();
+            System.out.print("Ingrese el numero de matrícula: ");
+            String numeroMatricula = sc.nextLine();
+            System.out.print("Ingrese la categoria ante el IVA: ");
+            String categoriaIva = sc.nextLine();            
+                    
+            try (Connection con = DriverManager.getConnection(url, username, pass)) {
+                Statement stmt = con.createStatement();
+
+                String query = "UPDATE MEDICO SET apellidoynombre = '" + apellidoYNombre + "', domicilio = '" + domicilio + "', tipodocumento = '" +tipoDocumento+"',"
+                    + " numerodocumento ="+numeroDocumento + ", fechanacimiento = '" + new java.sql.Date(fechaNac.getTime()) + "', nacionalidad = '"+ nacionalidad+ "',"
+                    + " telefono = '"+ numeroTelefono + "', sexo = '" + sexo + "', email = '" + email + "', "
+                    + " profesion = '"+profesion + "', cuit = '" + cuit +"', numeroMatricula = " + numeroMatricula + ", categoriaIva = '"+categoriaIva+"' WHERE IdMedico = " + med.getIdPersona();                
+       
+                if (stmt.executeUpdate(query) == 1) {
+                    System.out.println("El médico fue modificado con exito. Presione Enter para continuar.");
+                }
+            } catch (SQLException e) {
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");
+                System.out.println("\nPresione Enter para continuar.");
+            }
+            
+        }else{
+            System.out.println("Presione Enter para continuar.");
+        }   
+    }
     public static void eliminaMedico(String url, String username, String pass, Scanner sc){
         //Paciente pac;
         borrarPantalla();
         System.out.println("Eliminar Médico");
         System.out.println("------------------------------------\n");
-        int idMed = validarMedico(url, username, pass);
+        int idMed = buscarIdMedico(url, username, pass);
 
         if(siNo("Desea eliminar el médico")){
             try (Connection con = DriverManager.getConnection(url, username, pass)) {
@@ -444,8 +537,6 @@ public class Principal {
                   "SLQState: " + e.getSQLState() + "\n" +
                   "Mensaje: " + e.getMessage() + "\n");
                 System.out.println("\nPresione Enter para continuar.");                
-                //System.out.println("Excepcion creando la conexión: " + e);
-                //System.exit(0);
             }            
         }else{
             System.out.println("Presione Enter para continuar.");
@@ -470,12 +561,13 @@ public class Principal {
                 String apenom = rs.getString("apellidoYNombre");
                 String domic = rs.getString("domicilio");
                 String doc = rs.getString("numeroDocumento");
-                String fechanac = rs.getString("fechanacimiento");
+                Date fechanac = rs.getDate("fechanacimiento");
+                String fecha = obtenerFechaFormateada(fechanac,"dd/MM/yyyy");
                 String tel = rs.getString("telefono");
                 String profe = rs.getString("profesion");
                 String cuit = rs.getString("cuit");
 
-                System.out.println(rPad(codigo.trim(),10,' ')+"\t"+lPad(apenom.trim(),40,' ')+lPad(domic.trim(),50,' ')+rPad(doc.trim(),10,' ')+rPad(fechanac.trim(),20,' ')+"\t"+lPad(tel.trim(),20,' ')+lPad(profe.trim(),30,' ')+lPad(cuit.trim(),15,' '));
+                System.out.println(rPad(codigo.trim(),10,' ')+"\t"+lPad(apenom.trim(),40,' ')+lPad(domic.trim(),50,' ')+rPad(doc.trim(),10,' ')+rPad(fecha.trim(),20,' ')+"\t"+lPad(tel.trim(),20,' ')+lPad(profe.trim(),30,' ')+lPad(cuit.trim(),15,' '));
             }
             System.out.println("\nPresione Enter para continuar.");
             
@@ -484,8 +576,6 @@ public class Principal {
               "SLQState: " + e.getSQLState() + "\n" +
               "Mensaje: " + e.getMessage() + "\n");
             System.out.println("\nPresione Enter para continuar.");
-            //System.out.println("Exception creating connection: " + e);
-            //System.exit(0);
         }        
     }
 
@@ -494,15 +584,12 @@ public class Principal {
         borrarPantalla();
         System.out.println("Agregar Obra Social");
         System.out.println("------------------------------------\n");
-        //System.out.print("Ingrese la Razón Social: ");
-        String razonSocial = validarNombrePropio("la Razón Social");//sc.nextLine();
+        String razonSocial = validarNombrePropio("la Razón Social");
         System.out.print("Ingrese el domicilio: ");
         String domicilio = sc.nextLine();
         System.out.print("Ingrese el numero de telefono: ");
         String numeroTelefono = sc.nextLine();
-        //System.out.print("Ingrese CUIT: ");
         String cuit = validarCuit();
-        // cuit = validaCuit(cuit);      
         
         try (Connection con = DriverManager.getConnection(url, username, pass)) {
             Statement stmt = con.createStatement();
@@ -518,17 +605,63 @@ public class Principal {
             }
 
         } catch (SQLException e) {
-            System.out.println("Excepcion creando la conexión: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }        
     }
 
+    public static void modificaObraSocial(String url, String username, String pass, Scanner sc){
+
+        borrarPantalla();
+        //Scanner scan = new Scanner(System.in);
+        System.out.println("Modifica Obra Social");
+        System.out.println("------------------------------------\n");
+        System.out.print("Ingrese el Código de Obra Social: ");
+        String codiOS = sc.nextLine();
+        int codOS = Integer.parseInt(codiOS);
+        ObraSocial obrasoc = buscarObraSocial(url, username, pass, codOS);
+        obrasoc.mostrarObraSocial();
+        //int idpac = pac.getIdPersona();
+
+        
+        if(siNo("Desea modificar datos de la Obra Social")){
+            System.out.println("Modificando datos...");
+            String razonSocial = validarNombrePropio("la Razón Social");           
+            System.out.print("Ingrese el domicilio: ");
+            String domicilio = sc.nextLine();
+            System.out.print("Ingrese el numero de telefono: ");
+            String numeroTelefono = sc.nextLine();
+            String cuit = validarCuit();
+                    
+            try (Connection con = DriverManager.getConnection(url, username, pass)) {
+                Statement stmt = con.createStatement();
+
+                String query = "UPDATE OBRASOCIAL SET razonsocial = '" + razonSocial + "', domicilio = '" + domicilio + "',"
+                    + " telefono = '"+ numeroTelefono + "', cuit = '" + cuit + "' WHERE IdObraSocial = " + obrasoc.getIdObraSocial();                
+       
+                if (stmt.executeUpdate(query) == 1) {
+                    System.out.println("La Obra Social fue modificada con exito. Presione Enter para continuar.");
+                }
+            } catch (SQLException e) {
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");            
+                System.out.println("Presione Enter para continuar.");
+            }
+            
+        }else{
+            System.out.println("Presione Enter para continuar.");
+        }       
+    }    
+    
     public static void eliminaObraSocial(String url, String username, String pass, Scanner sc){
         //Paciente pac;
         borrarPantalla();
         System.out.println("Eliminar Obra Social");
         System.out.println("------------------------------------\n");
-        int idObraSoc = validarOS(url, username, pass);
+        int idObraSoc = buscarIdObraSocial(url, username, pass);
 
         if(siNo("Desea eliminar la Obra Social")){
             try (Connection con = DriverManager.getConnection(url, username, pass)) {
@@ -544,8 +677,6 @@ public class Principal {
                   "SLQState: " + e.getSQLState() + "\n" +
                   "Mensaje: " + e.getMessage() + "\n");
                 System.out.println("\nPresione Enter para continuar.");
-                //System.out.println("Excepcion creando la conexión: " + e);                
-                //System.exit(0);
             }            
         }else{
             System.out.println("Presione Enter para continuar.");
@@ -577,8 +708,10 @@ public class Principal {
             System.out.println("\nPresione Enter para continuar.");
             
         } catch (SQLException e) {
-            System.out.println("Exception creating connection: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }        
     }
     
@@ -587,8 +720,8 @@ public class Principal {
         borrarPantalla();
         System.out.println("Agregar Turno");
         System.out.println("------------------------------------\n");
-        int pac = validarPaciente(url, username, pass);
-        int med = validarMedico(url, username, pass);
+        int pac = buscarIdPaciente(url, username, pass);
+        int med = buscarIdMedico(url, username, pass);
         int posi;
         Date fechaTurno = validarFecha("Turno");
         boolean valido = false;
@@ -634,6 +767,7 @@ public class Principal {
                 System.out.println("Excepcion creando la conexión - Código de Error: " + e.getErrorCode() + "\n" +
                   "SLQState: " + e.getSQLState() + "\n" +
                   "Mensaje: " + e.getMessage() + "\n");
+                System.out.println("Presione Enter para continuar.");
         }        
     }
 
@@ -642,7 +776,7 @@ public class Principal {
         borrarPantalla();
         System.out.println("Eliminar Turno");
         System.out.println("------------------------------------\n");
-        int med = validarMedico(url, username, pass);
+        int med = buscarIdMedico(url, username, pass);
         int posi;
         int idturno = 0;
         String datosTurno = "";
@@ -691,6 +825,7 @@ public class Principal {
                 System.out.println("Excepcion creando la conexión - Código de Error: " + e.getErrorCode() + "\n" +
                   "SLQState: " + e.getSQLState() + "\n" +
                   "Mensaje: " + e.getMessage() + "\n");
+                System.out.println("Presione Enter para continuar.");                
             }              
         }      
     }    
@@ -705,7 +840,7 @@ public class Principal {
         borrarPantalla();
         String [] turnos = {"08:00","08:20","08:40","09:00","09:20","09:40","10:00","10:20","10:40","11:00","11:20","11:40","12:00"};
         String [] pacien = new String [13];
-        int medic = validarMedico(url, username, pass);
+        int medic = buscarIdMedico(url, username, pass);
         Date fecha = validarFecha("Turno");
         String query = "SELECT posicion, horainicial,apellidoYNombre FROM turnos INNER JOIN paciente ON turnos.idpaciente = paciente.idpaciente"
                 +" WHERE idmedico = " + medic + " and fecha = '"+new java.sql.Date(fecha.getTime())+"' order by posicion";
@@ -736,8 +871,10 @@ public class Principal {
             System.out.println("\nPresione Enter para continuar.");
             
         } catch (SQLException e) {
-            System.out.println("Excepcion creando conexión: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }
     }    
     
@@ -768,8 +905,10 @@ public class Principal {
             System.out.println("\nPresione Enter para continuar.");
             
         } catch (SQLException e) {
-            System.out.println("Excepcion creando conexión: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }
     }
     
@@ -853,7 +992,7 @@ public class Principal {
         return posi;
     }
        
-    public static int validarOS(String url, String username, String pass){
+    public static int buscarIdObraSocial(String url, String username, String pass){
         int os = 0;
         boolean valido = false;
         do 
@@ -876,15 +1015,47 @@ public class Principal {
                 }
                 
             } catch (SQLException e) {
-                System.out.println("Exception creating connection: " + e);
-                System.exit(0);
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");            
+                System.out.println("Presione Enter para continuar.");
             }
         } while (!valido);
             
         return os;
     }
- 
-    public static int validarPaciente(String url, String username, String pass){
+
+    public static ObraSocial buscarObraSocial(String url, String username, String pass, int os){
+        ObraSocial obrasoc = new ObraSocial();
+        boolean valido = false;
+        try (Connection con = DriverManager.getConnection(url, username, pass)) {
+            Statement stmt = con.createStatement();
+            String query = "SELECT * FROM OBRASOCIAL WHERE IdObraSocial = " + os;
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                obrasoc.setIdObraSocial(os);
+                obrasoc.setNombreObraSocial(rs.getString("razonsocial"));
+                obrasoc.setDomicilio(rs.getString("domicilio"));
+                obrasoc.setTelefono(rs.getString("telefono"));
+                obrasoc.setCuit(rs.getString("cuit"));
+                System.out.println("Obra Social seleccionada:"+obrasoc.getNombreObraSocial());
+                valido = true;
+            }
+
+            if (!valido) {    
+                System.out.println("No existe la obrasocial ingresada!");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
+        }            
+        return obrasoc;
+    }
+    
+    public static int buscarIdPaciente(String url, String username, String pass){
         int nPac = 0;
         int idPac = 0;
         boolean valido = false;
@@ -913,22 +1084,74 @@ public class Principal {
                 }
                 
             } catch (SQLException e) {
-                System.out.println("Exception creating connection: " + e);
-                System.exit(0);
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");            
+                System.out.println("Presione Enter para continuar.");
             }
         } while (!valido);
             
         return idPac;
     }    
 
-    public static int validarMedico(String url, String username, String pass){
+    public static Paciente buscarPaciente(String url, String username, String pass){
+        Paciente pac = new Paciente();
+        int nPac = 0;
+        
+        boolean valido = false;
+ 
+        do 
+        {
+            System.out.print("Ingrese el numero de documento del paciente: ");
+            Scanner sc = new Scanner(System.in);
+            nPac = sc.nextInt();
+
+            try (Connection con = DriverManager.getConnection(url, username, pass)) {
+                Statement stmt = con.createStatement();
+                
+                String query = "SELECT * FROM PACIENTE INNER JOIN OBRASOCIAL ON paciente.idobrasocial = obrasocial.idobrasocial WHERE NUMERODOCUMENTO = " + nPac;
+                
+                ResultSet rs = stmt.executeQuery(query);
+                while (rs.next()) {
+                    pac.setIdPersona(rs.getInt("idpaciente"));
+                    pac.setApellidoYNombre(rs.getString("apellidoYNombre"));
+                    pac.setDomicilio(rs.getString("domicilio"));
+                    pac.setTipoDocumento(rs.getString("tipodocumento"));
+                    pac.setNumeroDocumento(rs.getInt("numerodocumento"));
+                    pac.setFechaNacimiento(rs.getDate("fechanacimiento"));
+                    pac.setTelefono(rs.getString("telefono"));
+                    pac.setNacionalidad(rs.getString("nacionalidad"));
+                    pac.setSexo(rs.getString("sexo"));
+                    pac.setEmail(rs.getString("email"));
+                    pac.setCodigoAfiliadoObraSocial(rs.getString("numeroafiliadoObraSocial"));
+                    pac.setPlanObraSocial(rs.getString("nombrePlanObraSocial"));
+                    pac.setObraSocial(buscarObraSocial(url, username, pass, rs.getInt("idObraSocial")));
+                    valido = true;
+                }
+                        
+                if (!valido) {    
+                    System.out.println("No existe el paciente ingresado!");
+                }
+                
+            } catch (SQLException e) {
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");            
+                System.out.println("Presione Enter para continuar.");
+            }
+        } while (!valido);
+            
+        return pac;
+    }    
+    
+    public static int buscarIdMedico(String url, String username, String pass){
         int nMed = 0;
         int idMed = 0;
         boolean valido = false;
  
         do 
         {
-            System.out.print("Ingrese el numero de médico: ");
+            System.out.print("Ingrese el código de médico: ");
             Scanner sc = new Scanner(System.in);
             nMed = sc.nextInt();
 
@@ -950,14 +1173,68 @@ public class Principal {
                 }
                 
             } catch (SQLException e) {
-                System.out.println("Exception creating connection: " + e);
-                System.exit(0);
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");            
+                System.out.println("Presione Enter para continuar.");
             }
         } while (!valido);
             
         return idMed;
     }    
 
+    public static Medico buscarMedico(String url, String username, String pass){
+        Medico med = new Medico();
+        
+        int nMed = 0;
+        
+        boolean valido = false;
+ 
+        do 
+        {
+            System.out.print("Ingrese el código de médico: ");
+            Scanner sc = new Scanner(System.in);
+            nMed = sc.nextInt();
+
+            try (Connection con = DriverManager.getConnection(url, username, pass)) {
+                Statement stmt = con.createStatement();
+                
+                String query = "SELECT * FROM MEDICO WHERE IDMEDICO = " + nMed;
+                
+                ResultSet rs = stmt.executeQuery(query);
+                while (rs.next()) {
+                    med.setIdPersona(rs.getInt("idmedico"));
+                    med.setApellidoYNombre(rs.getString("apellidoYNombre"));
+                    med.setDomicilio(rs.getString("domicilio"));
+                    med.setTipoDocumento(rs.getString("tipodocumento"));
+                    med.setNumeroDocumento(rs.getInt("numerodocumento"));
+                    med.setFechaNacimiento(rs.getDate("fechanacimiento"));
+                    med.setTelefono(rs.getString("telefono"));
+                    med.setNacionalidad(rs.getString("nacionalidad"));
+                    med.setSexo(rs.getString("sexo"));
+                    med.setEmail(rs.getString("email"));
+                    med.setProfesion(rs.getString("profesion"));
+                    med.setCuit(rs.getString("cuit"));
+                    med.setNumeroMatricula(rs.getInt("numeromatricula"));
+                    med.setCategoriaIva(rs.getString("categoriaiva"));
+                    valido = true;
+                }
+                        
+                if (!valido) {    
+                    System.out.println("No existe el paciente ingresado!");
+                }
+                
+            } catch (SQLException e) {
+                System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+                  "SLQState: " + e.getSQLState() + "\n" +
+                  "Mensaje: " + e.getMessage() + "\n");            
+                System.out.println("Presione Enter para continuar.");
+            }
+        } while (!valido);
+            
+        return med;
+    }
+    
     public static int getNewId(String url, String username, String pass, String tabla, String campoId) {
         int IdNew = 0;
         try (Connection con = DriverManager.getConnection(url, username, pass)) {
@@ -968,8 +1245,10 @@ public class Principal {
                 IdNew = rs.getInt("Maximo")+1;
             }
         }catch (SQLException e) {
-            System.out.println("Excepcion creando la conexion: " + e);
-            System.exit(0);
+            System.out.println("Código de Error: " + e.getErrorCode() + "\n" +
+              "SLQState: " + e.getSQLState() + "\n" +
+              "Mensaje: " + e.getMessage() + "\n");            
+            System.out.println("Presione Enter para continuar.");
         }
         return IdNew;
     }
@@ -1010,13 +1289,33 @@ public class Principal {
                 if(Pattern.matches(numDocRegexp, numeroDoc)==true){
                     valido = true;
                 }else{
-                    System.out.println("El número de documento es incorrecto!");}
+                    System.out.println("El número de documento debe tener entre 7 y 8 digitos!");}
             }else {
-                System.out.println("El número de documento es incorrecto!");
+                System.out.println("El número de documento debe tener entre 7 y 8 digitos!");
             }         
         } while (!valido);
         
         return numeroDoc;
+    }
+    
+    public static String validarTipoDoc(){
+        boolean valido = false;
+        String tipoDoc = "";
+        do {
+            System.out.print("Ingrese tipo de documento [DNI]/[CI]/[PAS]: ");
+            Scanner sc = new Scanner(System.in);
+            tipoDoc = sc.nextLine();
+            String numDocRegexp;
+            
+            switch(tipoDoc.toUpperCase().trim()){
+                case "DNI": valido=true;break;
+                case "CI" : valido=true;break;
+                case "PAS": valido=true;break;
+                default: System.out.println("Valor no valido!!");
+            }       
+        } while (!valido);
+        
+        return tipoDoc;
     }
     
     public static String validarSexo() {
@@ -1110,5 +1409,10 @@ public class Principal {
         
         return respuesta;
     }
+
+    public static String obtenerFechaFormateada(Date fecha, String formato) {
+        SimpleDateFormat sdf = new SimpleDateFormat(formato);
+        return sdf.format(fecha);
+    } 
 }
 

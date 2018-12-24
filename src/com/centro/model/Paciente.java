@@ -11,12 +11,13 @@ public class Paciente extends Persona {
     private ObraSocial obraSocial;
 
     public Paciente() {
+        super();
         this.codigoAfiliadoObraSocial = "";
         this.planObraSocial = "";
         this.obraSocial = new ObraSocial();
     }
 
-    public Paciente(String codigoAfiliadoObraSocial, String planObraSocial, ObraSocial obraSocial, String apellidoYNombre, String domicilio, String tipoDocumento, int numeroDocumento, Date fechaNacimiento, String telefono, int idPersona, String nacionalidad, int sexo, String email) {
+    public Paciente(String codigoAfiliadoObraSocial, String planObraSocial, ObraSocial obraSocial, String apellidoYNombre, String domicilio, String tipoDocumento, int numeroDocumento, Date fechaNacimiento, String telefono, int idPersona, String nacionalidad, String sexo, String email) {
         super(apellidoYNombre, domicilio, tipoDocumento, numeroDocumento, fechaNacimiento, telefono, idPersona, nacionalidad, sexo, email);
         this.codigoAfiliadoObraSocial = codigoAfiliadoObraSocial;
         this.planObraSocial = planObraSocial;
@@ -47,4 +48,11 @@ public class Paciente extends Persona {
         this.obraSocial = obraSocial;
     }
 
+    public void mostrarPaciente() {
+        super.mostrarPersona();
+        System.out.println("Codigo Afiliado Obra Social: "+this.getCodigoAfiliadoObraSocial());
+        System.out.println("Plan Obra Social: "+this.getPlanObraSocial());
+        System.out.println("Codigo Obra Social: "+this.obraSocial.getIdObraSocial());
+        System.out.println("Obra Social: "+this.obraSocial.getNombreObraSocial());
+    }    
 }

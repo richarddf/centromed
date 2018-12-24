@@ -1,6 +1,7 @@
 package com.centro.model;
 
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public abstract class Persona {
@@ -13,7 +14,7 @@ public abstract class Persona {
     private String telefono;
     private int idPersona;
     private String nacionalidad;
-    private int sexo;
+    private String sexo;
     private String email;
 
     public Persona() {
@@ -25,11 +26,11 @@ public abstract class Persona {
         this.telefono = "";
         this.idPersona = 0;
         this.nacionalidad = "";
-        this.sexo = 0;
+        this.sexo = "";
         this.email = "";
     } 
     
-    public Persona(String apellidoYNombre, String domicilio, String tipoDocumento, int numeroDocumento, Date fechaNacimiento, String telefono, int idPersona, String nacionalidad, int sexo, String email) {
+    public Persona(String apellidoYNombre, String domicilio, String tipoDocumento, int numeroDocumento, Date fechaNacimiento, String telefono, int idPersona, String nacionalidad, String sexo, String email) {
         this.apellidoYNombre = apellidoYNombre;
         this.domicilio = domicilio;
         this.tipoDocumento = tipoDocumento;
@@ -106,11 +107,11 @@ public abstract class Persona {
         this.nacionalidad = nacionalidad;
     }
 
-    public int getSexo() {
+    public String getSexo() {
         return sexo;
     }
 
-    public void setSexo(int sexo) {
+    public void setSexo(String sexo) {
         this.sexo = sexo;
     }
 
@@ -123,7 +124,16 @@ public abstract class Persona {
     }
 
     public void mostrarPersona() {
-            throw new UnsupportedOperationException();
+        System.out.println("Id: "+this.getIdPersona());
+        System.out.println("Apellido Y Nombre: "+this.getApellidoYNombre());
+        System.out.println("Domicilio: "+this.getDomicilio());
+        System.out.println("Tipo Documento: "+this.getTipoDocumento());
+        System.out.println("Documento: "+this.getNumeroDocumento());
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        System.out.println("Fecha Nacimiento: "+sdf.format(this.getFechaNacimiento()));
+        System.out.println("Teléfono: "+this.getTelefono());
+        System.out.println("Nacionalidad: "+this.getNacionalidad());
+        System.out.println("Sexo: "+this.getSexo());
+        System.out.println("Email: "+this.getEmail());
     }
-
 }

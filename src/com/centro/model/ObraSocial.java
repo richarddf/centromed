@@ -66,7 +66,11 @@ public class ObraSocial {
     }
 
     public void mostrarObraSocial() {
-            throw new UnsupportedOperationException();
+        System.out.println("Id: "+this.getIdObraSocial());
+        System.out.println("Razon Social: "+this.getNombreObraSocial());
+        System.out.println("Domicilio: "+this.getDomicilio());
+        System.out.println("Teléfono: "+this.getTelefono());
+        System.out.println("CUIT: "+this.getCuit());        
     }
 
 }
